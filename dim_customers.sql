@@ -1,40 +1,33 @@
--- dim_customers created 
-create or replace table analytics_schema.dim_customers as
+-- dim_customers created
+create table analytics_schema.dim_customers as 
 with customers_cte as (
-select 
-try_to_number(id) as id,
+select
+id as customer_id,
 initcap(
-    trim(
-        concat(
-            nullif(trim(first_name), ''), ' ', nullif(trim(last_name), '')
-        )
-    )
+	concat(
+		trim(first_name), ' ', trim(last_name)
+	)
 ) as customer_name,
-lower(nullif(trim(email), '')) as email,
-case 
-    when lower(trim(gender)) = 'male' then 'M'
-    when lower(trim(gender)) = 'female' then 'F'
-    when trim(gender) is null then 'Unknown'
-    else 'Other'
+lower(trim(email)) as email,
+case
+	when lower(trim(gender)) = 'male' then 'M'
+	when lower(trim(gender)) = 'female' then 'F'
 end as gender,
-upper(nullif(trim(city), '')) as city,
-upper(nullif(trim(country), '')) as country,
-try_to_date(dob) as dob,
-datediff('year', dob, current_date()) as age,
-try_to_date(signup_date) as signup_date,
-datediff('day', signup_date, current_date()) as days_as_customer,
-current_timestamp() as loaded_at
+dob as birth_date,
+date_part('year', age(current_date, dob)) as age,
+upper(trim(city)) as city,
+upper(trim(country)) as country,
+signup_date,
+(current_date - signup_date) as days_as_customer
 from 
 raw_schema.customers
 )
 select 
-id,
+customer_id,
 customer_name,
 email,
 gender,
-city,
-country,
-dob,
+birth_date,
 age,
 /* age group */
 case
@@ -47,6 +40,8 @@ case
     when age >= 0  then 'Children'
     else 'Unknown'
 end as age_group,
+city,
+country,
 signup_date,
 days_as_customer,
 /* customer type */
@@ -67,6 +62,8 @@ case
     when days_as_customer >= 90 then '3-6 months'
     else 'Less than 3 months'
 end as customer_tenure_bucket,
-loaded_at
-from
+current_timestamp as loaded_at
+from 
 customers_cte;
+
+select * from analytics_schema.dim_custome
