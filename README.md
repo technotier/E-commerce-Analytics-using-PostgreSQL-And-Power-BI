@@ -1,4 +1,4 @@
-# 🛒 E-commerce Analytics with Snowflake
+# 🛒 E-commerce Analytics with PostgreSQL and Power BI
 # 📌 Project Overview
 
 End-to-end e-commerce analytics data model built using Snowflake
