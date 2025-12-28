@@ -13,13 +13,15 @@ oi.unit_price::decimal(10, 2) as unit_price,
 (oi.quantity * oi.unit_price)::decimal(10, 2) as gross_amount,
 coalesce(oi.discounts, 0) as discounts,
 ((oi.quantity * oi.unit_price) - coalesce(oi.discounts, 0))::decimal(10, 2) as net_amount,
+oi.quantity * dp.cost_price as total_cost,
 case 
 	when coalesce(oi.discounts, 0) > 0 then 'Discounted'
 	else 'Full Price'
 end as discount_flag
 from 
 raw_schema.orders o join raw_schema.order_items oi on 
-o.id = oi.order_id
+o.id = oi.order_id join analytics_schema.dim_products dp on
+oi.product_id = dp.product_id 
 )
 select
 order_id,
@@ -33,6 +35,8 @@ unit_price,
 gross_amount,
 discounts,
 net_amount,
+total_cost,
+net_amount - total_cost as net_profit_amount,
 discount_flag,
 case 
     when quantity >= 10 then 'Bulk Order'
